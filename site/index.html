@@ -1061,7 +1061,7 @@ window.SPOTIFY_SYSTEM = {
     });
     h += `</ul>`;
     h += `<h3>LateNights</h3><div class="chips">${lns.map(l => chip(l.id)).join("")}</div>`;
-    h += `<p class="muted" style="margin-top:18px;font-size:13px">Hover or tap anything on the map to trace its connections. Scroll or pinch to zoom, drag to move, and press FIT to see everything again. Hollow dots and italics are personal playlists. A dashed line means the same playlist sits in both layers.</p>`;
+    h += `<p class="muted" style="margin-top:18px;font-size:13px">Hover or tap anything on the map to trace its connections. Pinch (or Ctrl + scroll) to zoom, scroll or drag to move, and press FIT to see everything again. Hollow dots and italics are personal playlists. A dashed line means the same playlist sits in both layers.</p>`;
     return h;
   }
 
@@ -1129,10 +1129,24 @@ window.SPOTIFY_SYSTEM = {
   wrap.addEventListener("wheel", e => {
     if (!view) return;
     e.preventDefault();
-    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-    zoomAt(Math.exp(-dy * 0.0018), e.clientX, e.clientY);
+    const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? wrap.clientHeight : 1;
+    const dx = e.deltaX * unit, dy = e.deltaY * unit;
+    // Touchpad pinch (and Ctrl + mouse wheel) arrives as a wheel event with ctrlKey set: zoom.
+    // A plain two-finger slide or mouse wheel moves the map; Shift + wheel moves sideways.
+    if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-Math.max(-50, Math.min(50, dy)) * 0.01), e.clientX, e.clientY);
+    else if (e.shiftKey && !dx) panBy(-dy, 0);
+    else panBy(-dx, -dy);
   }, { passive: false });
-  wrap.addEventListener("gesturestart", e => e.preventDefault());
+  // Safari on Mac reports touchpad pinches as gesture events instead of ctrl + wheel.
+  // On iPhone/iPad the pointer handlers already do the pinch, so only act when no touch is down.
+  let gestureScale = 1;
+  wrap.addEventListener("gesturestart", e => { e.preventDefault(); gestureScale = 1; });
+  wrap.addEventListener("gesturechange", e => {
+    e.preventDefault();
+    if (!view || pts.size) return;
+    zoomAt(e.scale / gestureScale, e.clientX, e.clientY);
+    gestureScale = e.scale;
+  });
   wrap.querySelector(".zoom").addEventListener("click", e => {
     const b = e.target.closest("[data-z]");
     if (!b || !view) return;

@@ -13,7 +13,7 @@ My library has two layers:
 
 The map runs left to right: library → mood folders → playlists → LateNights. Hover or tap any node to trace its connections. Search works on playlist names, codes and songs. "Not in LateNights" highlights the playlists that don't feed any LateNights yet.
 
-The whole map fits the screen when it opens. Scroll or pinch to zoom, drag to move, and press FIT (or 0) to see everything again. On a laptop, "Hide details" gives the map the full width and "Fullscreen" fills the screen. On a phone, tapping anything opens its details in a bottom sheet.
+The whole map fits the screen when it opens. Pinch (or Ctrl + scroll) to zoom, scroll with two fingers or drag to move, and press FIT (or 0) to see everything again. On a laptop, "Hide details" gives the map the full width and "Fullscreen" fills the screen. On a phone, tapping anything opens its details in a bottom sheet.
 
 ![Playlist map](playlist-map.png)
 

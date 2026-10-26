@@ -29,25 +29,32 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
+/* The page is a one-screen app: header on top, the map canvas fills the rest. */
+html, body { height: 100%; }
 body {
   margin: 0;
   -webkit-text-size-adjust: 100%;
   background: var(--bg);
   color: var(--fg);
   font: 15px/1.5 var(--f-body);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 22px 0;
+  padding-block: 18px 16px;
 }
 
 /* ---------- header ---------- */
 .top {
-  max-width: 1520px;
-  margin: 0 auto 16px;
+  width: 100%;
+  margin: 0 0 14px;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: space-between;
   gap: 14px 36px;
 }
 .eyebrow {
@@ -64,15 +71,9 @@ body {
   text-wrap: balance;
 }
 .brand h1 span { color: var(--gold); }
-.lede {
-  flex: 1 1 300px;
-  max-width: 58ch;
-  margin: 0;
-  color: var(--muted);
-}
 .tools {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
 }
 .tools input,
@@ -86,7 +87,7 @@ body {
 }
 .tools input { width: min(260px, 100%); }
 .tools input::placeholder { color: var(--muted); }
-.tools button { cursor: pointer; }
+.tools button { cursor: pointer; white-space: nowrap; }
 .tools button:hover { border-color: var(--muted); }
 .tools button[aria-pressed="true"] {
   background: var(--gold);
@@ -98,64 +99,90 @@ body {
   outline-offset: 2px;
 }
 
-/* ---------- layout ---------- */
+/* ---------- layout: zoomable map canvas + collapsible details column ---------- */
 .layout {
-  max-width: 1520px;
-  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
-  align-items: start;
 }
+.layout.details-off { grid-template-columns: minmax(0, 1fr); }
+.layout.details-off .panel { display: none; }
+.layout:fullscreen { background: var(--bg); padding: 16px; }
+.layout:-webkit-full-screen { background: var(--bg); padding: 16px; width: 100%; height: 100%; }
 .mapwrap {
+  position: relative;
   min-width: 0;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
-  margin-bottom: 16px;
+  cursor: grab;
 }
-#map { display: block; height: auto; }
+.mapwrap.dragging { cursor: grabbing; }
+#map { display: block; width: 100%; height: 100%; }
 
 .panel {
+  min-height: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 20px 22px;
   overflow: auto;
 }
-@media (min-width: 1100px) {
-  .layout { grid-template-columns: minmax(0, 1fr) 340px; }
-  .panel {
-    position: sticky;
-    top: calc(16px + env(safe-area-inset-top, 0px));
-    max-height: calc(100vh - 32px);
-  }
+
+/* Map controls: view toggles top-right, zoom bottom-right. */
+.maptools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
 }
-@media (max-width: 1099px) {
-  .layout { gap: 0; }
-  .panel {
-    position: sticky;
-    bottom: 0;
-    max-height: 42vh;
-    border-radius: 16px 16px 0 0;
-    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -14px 32px var(--shadow);
-  }
+.maptools button,
+.zoom button {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--fg);
+  box-shadow: 0 6px 16px var(--shadow);
+  cursor: pointer;
 }
+.maptools button {
+  font: 500 13px var(--f-body);
+  border-radius: 999px;
+  padding: 7px 13px;
+}
+.maptools button:hover, .zoom button:hover { border-color: var(--muted); }
+.zoom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  right: 12px;
+  bottom: calc(var(--sheet-h, 0px) + 12px);
+  z-index: 2;
+}
+.zoom button {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  font: 600 18px/1 var(--f-body);
+}
+.zoom button[data-z="fit"] { font: 500 11px/1 var(--f-mono); letter-spacing: 0.04em; }
 
 /* ---------- phone / tablet: full-screen mind map with pinch-zoom, details in a bottom sheet ---------- */
-.sheetbar, .zoom { display: none; }
+.sheetbar { display: none; }
 @media (max-width: 899px), (pointer: coarse) {
-  html, body { height: 100%; }
-  body {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding-block: calc(10px + env(safe-area-inset-top, 0px)) 0;
-  }
-  .top { width: 100%; margin: 0 0 10px; gap: 8px 16px; align-items: center; }
-  .brand .eyebrow, .lede { display: none; }
+  body { padding-block: calc(10px + env(safe-area-inset-top, 0px)) 0; }
+  .top { margin: 0 0 10px; gap: 8px 16px; align-items: center; }
+  .maptools { display: none; }
+  .brand .eyebrow { display: none; }
   .brand h1 { font-size: 24px; }
   .tools { flex: 1 1 100%; flex-wrap: nowrap; }
   .tools input { flex: 1 1 auto; min-width: 0; width: auto; }
@@ -163,50 +190,24 @@ body {
   .tools button { white-space: nowrap; }
   #reset { display: none; }
 
-  .layout {
-    flex: 1;
-    min-height: 0;
+  .layout,
+  .layout.details-off {
     display: block;
     position: relative;
-    max-width: none;
     margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
     margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
   }
   .mapwrap {
     position: absolute;
     inset: 0;
-    margin: 0;
-    overflow: hidden;
-    touch-action: none;
     border-width: 1px 0 0;
     border-radius: 0;
-    -webkit-user-select: none;
-    user-select: none;
   }
-  #map { width: 100%; height: 100%; }
+  .zoom { right: max(12px, env(safe-area-inset-right, 0px)); }
+  .zoom button { width: 42px; height: 42px; }
 
-  .zoom {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: absolute;
-    right: max(12px, env(safe-area-inset-right, 0px));
-    bottom: calc(var(--sheet-h, 64px) + 12px);
-    z-index: 2;
-  }
-  .zoom button {
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--fg);
-    font: 600 18px/1 var(--f-body);
-    box-shadow: 0 6px 16px var(--shadow);
-    cursor: pointer;
-  }
-  .zoom button[data-z="fit"] { font: 500 11px/1 var(--f-mono); letter-spacing: 0.04em; }
-
-  .panel {
+  .panel,
+  .layout.details-off .panel {
     position: fixed;
     top: auto;
     left: 0;
@@ -273,7 +274,8 @@ body.poster {
   --f-mono: "IBM Plex Mono", "Noto Color Emoji", ui-monospace, Consolas, monospace;
 }
 body.poster { height: auto; display: block; overflow: visible; padding: 0; background: var(--surface); }
-body.poster .top, body.poster .panel, body.poster .zoom { display: none; }
+body.poster .top, body.poster .panel, body.poster .zoom, body.poster .maptools { display: none; }
+body.poster #map { width: auto; height: auto; }
 body.poster .layout { display: block; max-width: none; margin: 0; position: static; }
 body.poster .mapwrap { position: static; border: 0; border-radius: 0; margin: 0; overflow: visible; }
 
@@ -433,7 +435,6 @@ body.poster .mapwrap { position: static; border: 0; border-radius: 0; margin: 0;
     <p class="eyebrow">Anirudh · Spotify</p>
     <h1>Playlist <span>Map</span></h1>
   </div>
-  <p class="lede">Your mood library reads left to right: FB Clearance, its mood folders, then every playlist. The gold column is LateNights, and each line into it shows where its best songs come from.</p>
   <div class="tools">
     <input id="q" type="search" placeholder="Find a playlist, code or song" aria-label="Search playlists" autocomplete="off">
     <button id="orphans" type="button" aria-pressed="false">Not in LateNights</button>
@@ -444,6 +445,10 @@ body.poster .mapwrap { position: static; border: 0; border-radius: 0; margin: 0;
 <main class="layout">
   <section class="mapwrap" aria-label="Playlist map">
     <svg id="map" role="group" aria-label="FB Clearance mood folders, playlists and LateNights"></svg>
+    <div class="maptools">
+      <button id="detailsBtn" type="button" aria-pressed="true" aria-controls="panel">Hide details</button>
+      <button id="fsBtn" type="button" aria-pressed="false">Fullscreen</button>
+    </div>
     <div class="zoom">
       <button type="button" data-z="in" aria-label="Zoom in">+</button>
       <button type="button" data-z="out" aria-label="Zoom out">−</button>
@@ -809,21 +814,21 @@ window.SPOTIFY_SYSTEM = {
       document.body.dataset.size = `${Math.ceil(MW)}x${Math.ceil(MH)}`;
       return;
     }
-    if (PZ.matches) {
-      svg.style.minWidth = "0";
-      wrap.style.setProperty("--sheet-h", sheetH() + "px");
-      if (!view || refit || !userMoved) fit();
-      else setView(view);
+    wrap.style.setProperty("--sheet-h", sheetH() + "px");
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    if (!view || refit || !userMoved) {
+      fit();
     } else {
-      view = null;
-      // Fill the panel's width; below ~80% scale the map scrolls sideways instead of shrinking further.
-      svg.setAttribute("viewBox", `0 0 ${MW} ${MH}`);
-      svg.style.width = "100%";
-      svg.style.minWidth = Math.round(MW * 0.8) + "px";
+      // The frame changed size (window, fullscreen, details panel): keep the zoom level and the centre point.
+      const cx = view.x + view.w / 2, cy = view.y + view.h / 2;
+      const w = r.width / lastS, h = r.height / lastS;
+      setView({ x: cx - w / 2, y: cy - h / 2, w, h });
     }
   }
   const sheetH = () => (PZ.matches ? sheetbar.getBoundingClientRect().height : 0);
   const scale = () => wrap.getBoundingClientRect().width / view.w;
+  let lastS = 1;
 
   function setView(v) {
     const s = wrap.getBoundingClientRect().width / v.w;
@@ -831,6 +836,7 @@ window.SPOTIFY_SYSTEM = {
     v.x = Math.min(Math.max(v.x, -v.w + m), MW - m);
     v.y = Math.min(Math.max(v.y, -v.h + m), MH - m);
     view = v;
+    lastS = s;
     svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
   }
   function fit() {
@@ -862,7 +868,8 @@ window.SPOTIFY_SYSTEM = {
     const r = wrap.getBoundingClientRect();
     const b = n.el.getBBox();
     const ns = Math.max(scale(), minS);
-    const visH = r.height - (panel.classList.contains("collapsed") ? sheetH() : panel.getBoundingClientRect().height);
+    const cover = !PZ.matches ? 0 : panel.classList.contains("collapsed") ? sheetH() : panel.getBoundingClientRect().height;
+    const visH = r.height - cover;
     const w = r.width / ns, h = r.height / ns;
     const target = { x: b.x + b.width / 2 - w / 2, y: b.y + b.height / 2 - Math.max(visH, 120) / 2 / ns, w, h };
     const from = { ...view };
@@ -879,12 +886,13 @@ window.SPOTIFY_SYSTEM = {
     })(t0);
     userMoved = true;
   }
-  function hiddenBySheet(n) {
+  // True when the node is outside the map frame or, on phones, under the open details sheet.
+  function offscreen(n) {
     if (!n.el) return false;
     const b = n.el.getBoundingClientRect();
-    const top = panel.getBoundingClientRect().top;
     const r = wrap.getBoundingClientRect();
-    return b.top + b.height / 2 > top - 20 || b.bottom < r.top || b.right < r.left || b.left > r.right;
+    const bottom = PZ.matches && !panel.classList.contains("collapsed") ? panel.getBoundingClientRect().top - 20 : r.bottom;
+    return b.top + b.height / 2 > bottom || b.bottom < r.top || b.right < r.left || b.left > r.right;
   }
 
   // ---------- highlighting ----------
@@ -1053,7 +1061,7 @@ window.SPOTIFY_SYSTEM = {
     });
     h += `</ul>`;
     h += `<h3>LateNights</h3><div class="chips">${lns.map(l => chip(l.id)).join("")}</div>`;
-    h += `<p class="muted" style="margin-top:18px;font-size:13px">Hover or tap anything on the map to trace its connections. Hollow dots and italics are personal playlists. A dashed line means the same playlist sits in both layers.</p>`;
+    h += `<p class="muted" style="margin-top:18px;font-size:13px">Hover or tap anything on the map to trace its connections. Scroll or pinch to zoom, drag to move, and press FIT to see everything again. Hollow dots and italics are personal playlists. A dashed line means the same playlist sits in both layers.</p>`;
     return h;
   }
 
@@ -1066,15 +1074,10 @@ window.SPOTIFY_SYSTEM = {
     paint();
     renderPanel();
     const n = N.get(id);
-    if (!n || !n.el || id === "root") return;
-    if (PZ.matches && view) {
-      // Chips jump to the node at a readable size; taps only move the map if the sheet covers the node.
-      if (scroll) centerOn(n, 1);
-      else if (hiddenBySheet(n)) centerOn(n, 0);
-    } else if (scroll) {
-      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      n.el.scrollIntoView({ block: "center", inline: "center", behavior: reduce ? "auto" : "smooth" });
-    }
+    if (!n || !n.el || id === "root" || !view) return;
+    // Chips jump to the node at a readable size; taps only move the map if the node is out of sight.
+    if (scroll) centerOn(n, 1);
+    else if (offscreen(n)) centerOn(n, 0);
   }
   function clearAll() {
     selected = null;
@@ -1089,7 +1092,8 @@ window.SPOTIFY_SYSTEM = {
   const pts = new Map();
   let start = null, dragging = false, suppressClick = false;
   wrap.addEventListener("pointerdown", e => {
-    if (!PZ.matches || POSTER || !view || e.target.closest(".zoom")) return;
+    if (POSTER || !view || e.target.closest(".zoom, .maptools")) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     if (pts.size === 0) { dragging = false; suppressClick = false; start = { x: e.clientX, y: e.clientY }; }
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size > 1) dragging = true;
@@ -1101,6 +1105,7 @@ window.SPOTIFY_SYSTEM = {
       if (!dragging) {
         if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
         dragging = true;
+        wrap.classList.add("dragging");
         try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
       }
       panBy(e.clientX - prev.x, e.clientY - prev.y);
@@ -1117,14 +1122,15 @@ window.SPOTIFY_SYSTEM = {
   });
   function endPointer(e) {
     if (!pts.delete(e.pointerId)) return;
-    if (pts.size === 0) suppressClick = dragging;
+    if (pts.size === 0) { suppressClick = dragging; wrap.classList.remove("dragging"); }
   }
   wrap.addEventListener("pointerup", endPointer);
   wrap.addEventListener("pointercancel", endPointer);
   wrap.addEventListener("wheel", e => {
-    if (!PZ.matches || !view) return;
+    if (!view) return;
     e.preventDefault();
-    zoomAt(Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    zoomAt(Math.exp(-dy * 0.0018), e.clientX, e.clientY);
   }, { passive: false });
   wrap.addEventListener("gesturestart", e => e.preventDefault());
   wrap.querySelector(".zoom").addEventListener("click", e => {
@@ -1137,12 +1143,58 @@ window.SPOTIFY_SYSTEM = {
     if (b.dataset.z === "fit") fit();
   });
   sheetbar.addEventListener("click", () => setSheet(panel.classList.contains("collapsed")));
-  let resizeTimer = 0;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => applyMode(false), 120);
-  });
+  // Any change to the map frame's size (window, fullscreen, details panel) re-sizes the view.
+  let sizeFrame = 0;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(sizeFrame);
+    sizeFrame = requestAnimationFrame(() => { if (MW) applyMode(false); });
+  }).observe(wrap);
   PZ.addEventListener("change", () => applyMode(true));
+
+  // Keyboard: + / - zoom, 0 fits the whole map (ignored while typing in search).
+  document.addEventListener("keydown", e => {
+    if (!view || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    const r = wrap.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + (r.height - sheetH()) / 2;
+    if (e.key === "+" || e.key === "=") zoomAt(1.5, cx, cy);
+    else if (e.key === "-" || e.key === "_") zoomAt(1 / 1.5, cx, cy);
+    else if (e.key === "0") fit();
+    else return;
+    e.preventDefault();
+  });
+
+  // Details panel on/off (remembered in this browser) and fullscreen for the map + panel.
+  const layout = wrap.parentElement;
+  const detailsBtn = document.getElementById("detailsBtn");
+  const fsBtn = document.getElementById("fsBtn");
+  function setDetails(on) {
+    layout.classList.toggle("details-off", !on);
+    detailsBtn.setAttribute("aria-pressed", String(on));
+    detailsBtn.textContent = on ? "Hide details" : "Show details";
+    try { localStorage.setItem("pm-details", on ? "1" : "0"); } catch (_) {}
+  }
+  let detailsOn = true;
+  try { detailsOn = localStorage.getItem("pm-details") !== "0"; } catch (_) {}
+  setDetails(detailsOn);
+  detailsBtn.addEventListener("click", () => setDetails(layout.classList.contains("details-off")));
+
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) fsBtn.hidden = true;
+  fsBtn.addEventListener("click", () => {
+    if (fsElement()) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      const req = layout.requestFullscreen || layout.webkitRequestFullscreen;
+      if (req) Promise.resolve(req.call(layout)).catch(() => {});
+    }
+  });
+  function syncFullscreen() {
+    const on = !!fsElement();
+    fsBtn.textContent = on ? "Exit fullscreen" : "Fullscreen";
+    fsBtn.setAttribute("aria-pressed", String(on));
+  }
+  document.addEventListener("fullscreenchange", syncFullscreen);
+  document.addEventListener("webkitfullscreenchange", syncFullscreen);
 
   svg.addEventListener("click", e => {
     if (suppressClick) { suppressClick = false; return; }

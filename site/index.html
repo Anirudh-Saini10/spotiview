@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anirudh's Playlist Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a left-to-right flow (library → mood folders → playlists → LateNights) with a detail panel docked beside it.
+   Deliberately single-theme: a late-night listening room, ink-blue ground, one colour per mood. */
+:root {
+  --bg: #0b0d17;
+  --surface: #121527;
+  --surface-2: #1a1e35;
+  --line: #262b47;
+  --fg: #ebe8f4;
+  --muted: #8d91ad;
+  --gold: #f2d48a;
+  --ln-zone: rgba(242, 212, 138, 0.045);
+  --shadow: rgba(0, 0, 0, 0.5);
+
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 22px 0;
+}
+
+/* ---------- header ---------- */
+.top {
+  max-width: 1520px;
+  margin: 0 auto 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 36px;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  font: 500 11px/1.2 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.brand h1 {
+  margin: 0;
+  font: 800 clamp(30px, 4.2vw, 46px)/0.95 var(--f-display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.brand h1 span { color: var(--gold); }
+.lede {
+  flex: 1 1 300px;
+  max-width: 58ch;
+  margin: 0;
+  color: var(--muted);
+}
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tools input,
+.tools button {
+  font: 500 14px var(--f-body);
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+.tools input { width: min(260px, 100%); }
+.tools input::placeholder { color: var(--muted); }
+.tools button { cursor: pointer; }
+.tools button:hover { border-color: var(--muted); }
+.tools button[aria-pressed="true"] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bg);
+}
+:is(input, button):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- layout ---------- */
+.layout {
+  max-width: 1520px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.mapwrap {
+  min-width: 0;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+#map { display: block; height: auto; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 22px;
+  overflow: auto;
+}
+@media (min-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 1fr) 340px; }
+  .panel {
+    position: sticky;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    max-height: calc(100vh - 32px);
+  }
+}
+@media (max-width: 1099px) {
+  .layout { gap: 0; }
+  .panel {
+    position: sticky;
+    bottom: 0;
+    max-height: 42vh;
+    border-radius: 16px 16px 0 0;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -14px 32px var(--shadow);
+  }
+}
+
+/* ---------- map ---------- */
+.t-head { font: 500 10.5px var(--f-mono); letter-spacing: 0.12em; fill: var(--muted); }
+.t-head.gold { fill: var(--gold); }
+.t-root { font: 800 18px var(--f-display); fill: var(--fg); }
+.t-sub { font: 500 10.5px var(--f-mono); fill: var(--muted); }
+.t-folder { font: 600 13.5px var(--f-body); fill: var(--fg); }
+.t-count { font: 500 11px var(--f-mono); fill: var(--c); }
+.t-pl { font: 500 13px var(--f-body); fill: var(--fg); }
+.t-pl .t-full { font-size: 11.5px; font-weight: 400; fill: var(--muted); }
+.t-pl.personal { fill: var(--muted); font-style: italic; }
+.t-ln { font: 600 14.5px var(--f-display); fill: var(--gold); }
+.t-recipe { font: 500 10.5px var(--f-mono); fill: var(--muted); }
+
+.s-root { fill: var(--surface-2); stroke: var(--fg); stroke-opacity: 0.35; }
+.s-folder { fill: var(--surface-2); fill: color-mix(in srgb, var(--c) 15%, var(--surface)); stroke: var(--c); stroke-width: 1.2; }
+.s-pl { fill: var(--c); }
+.s-pl.personal { fill: var(--surface); stroke: var(--c); stroke-width: 1.5; }
+.s-ln { fill: var(--surface-2); stroke: var(--gold); stroke-opacity: 0.5; }
+.s-ln.personal { stroke-dasharray: 4 4; stroke-opacity: 0.35; }
+.ln-zone { fill: var(--ln-zone); }
+.hitbox { fill: transparent; }
+
+.edge { fill: none; stroke: var(--c); transition: opacity 0.2s, stroke-width 0.2s; }
+.e-root { stroke-width: 2; opacity: 0.45; }
+.e-folder { stroke-width: 1.2; opacity: 0.4; }
+.e-ln { stroke-width: 1.6; opacity: 0.32; }
+.e-ln.same { stroke-dasharray: 4 4; }
+
+.node { cursor: pointer; transition: opacity 0.2s; outline: none; }
+.node:hover .t-pl:not(.personal),
+.node:hover .t-folder { fill: #fff; }
+.node:focus-visible .shape { stroke: var(--fg); stroke-width: 2.5; }
+.node.sel .shape { stroke: var(--fg); stroke-width: 2; }
+.node.match .t-pl { fill: var(--gold); }
+
+#map.focus .node { opacity: 0.15; }
+#map.focus .edge { opacity: 0.05; }
+#map.focus .node.on { opacity: 1; }
+#map.focus .edge.on { opacity: 0.95; stroke-width: 2.2; }
+
+/* ---------- panel ---------- */
+.panel h2 {
+  margin: 0 0 6px;
+  font: 800 26px/1.1 var(--f-display);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.panel h3 {
+  margin: 20px 0 8px;
+  font: 500 10.5px/1.2 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.panel p { margin: 0 0 8px; }
+.panel .muted { color: var(--muted); }
+.panel .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--c, var(--muted)); }
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--c, var(--muted));
+  flex: none;
+}
+.code {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  color: var(--muted);
+}
+.code b {
+  font: 500 12px var(--f-mono);
+  color: var(--c, var(--gold));
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  border-left: 2px dashed var(--line);
+  padding-left: 10px;
+}
+.examples { margin: 0; padding-left: 18px; }
+.examples li { margin-bottom: 2px; }
+.badge {
+  display: inline-block;
+  font: 500 10.5px var(--f-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 500 13px var(--f-body);
+  color: var(--fg);
+  background: var(--surface-2);
+  background: color-mix(in srgb, var(--c, var(--muted)) 13%, transparent);
+  border: 1px solid var(--line);
+  border-color: color-mix(in srgb, var(--c, var(--muted)) 50%, transparent);
+  border-radius: 999px;
+  padding: 4px 11px;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--c, var(--muted)); }
+.chip.ln { --c: var(--gold); }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+.stats div { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.stats b {
+  display: block;
+  font: 800 26px/1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+.stats span { font-size: 12px; color: var(--muted); line-height: 1.3; display: block; margin-top: 4px; }
+.folder-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.folder-list button {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  font: 500 14px var(--f-body);
+  color: var(--fg);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.folder-list button:hover { background: var(--surface-2); }
+.folder-list .n { margin-left: auto; font: 500 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.group { margin-bottom: 12px; }
+.group p { font-size: 13px; color: var(--c); margin-bottom: 6px; }
+.back {
+  font: 500 12px var(--f-mono);
+  color: var(--muted);
+  background: none; border: 0; padding: 0; margin-bottom: 14px;
+  cursor: pointer;
+}
+.back:hover { color: var(--fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .edge, .node { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <p class="eyebrow">Anirudh · Spotify</p>
+    <h1>Playlist <span>Map</span></h1>
+  </div>
+  <p class="lede">Your mood library reads left to right: FB Clearance, its mood folders, then every playlist. The gold column is LateNights, and each line into it shows where its best songs come from.</p>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Find a playlist, code or song" aria-label="Search playlists" autocomplete="off">
+    <button id="orphans" type="button" aria-pressed="false">Not in LateNights</button>
+    <button id="reset" type="button">Show all</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="mapwrap" aria-label="Playlist map">
+    <svg id="map" role="group" aria-label="FB Clearance mood folders, playlists and LateNights"></svg>
+  </section>
+  <aside id="panel" class="panel" aria-live="polite"></aside>
+</main>
+
+<script>
+// ===== YOUR PLAYLIST DATA: edit this block to change the map =====
+// Single source of truth for the playlist map (spotify-map.html).
+// Folders are listed in the same order as they appear in Spotify.
+// "guessed": true marks descriptions inferred from names/covers, not yet confirmed.
+window.SPOTIFY_SYSTEM = {
+  "owner": "Anirudh",
+  "updated": "2026-10-19",
+
+  "library": {
+    "name": "FB Clearance",
+    "folders": [
+      {
+        "id": "emotion", "name": "Emotion (Nostalgic Melancholy)", "emoji": "🫂", "color": "#7c9cff",
+        "playlists": [
+          { "id": "destiny", "name": "Destiny", "full": "Romantic ballads", "desc": "Romantic, hopeful ballads. Soulmate music.", "examples": ["The Night We Met", "Perfect", "All Of Me"] },
+          { "id": "mcp", "name": "MCP.Preset", "code": "MCP", "full": "Melodic Chill Pop", "desc": "Melancholy pop with strong production. Bittersweet memories.", "examples": ["this time", "I'm so tired…", "The Internet", "Super Far"] },
+          { "id": "caf", "name": "CAF.Preset", "code": "CAF", "full": "Country / Acoustic / Folk", "desc": "Acoustic storytelling. Mountains, roads, campfires.", "examples": ["Riptide", "Let Her Go", "Stick Season", "Budapest"] },
+          { "id": "deadpan", "name": "DeadPan", "full": "Raw sadness", "desc": "Raw sadness with minimal production. Heartbreak.", "examples": ["Happier", "Glimpse Of Us", "Breakeven", "Beanie"] },
+          { "id": "favartists", "name": "FavArtists", "personal": true, "desc": "Personal playlist of favourite artists." }
+        ]
+      },
+      {
+        "id": "hard", "name": "hard/heat/rock", "emoji": "🔥", "color": "#ff5d5d",
+        "playlists": [
+          { "id": "bbr", "name": "BBR.Preset", "code": "BBR", "full": "Boom Bap Rap", "desc": "Lyric-first rap. Bars, technical rapping, dense writing.", "examples": ["Accordion", "Figaro", "Rigamortus", "93 'Til Infinity"] },
+          { "id": "thr", "name": "THR.Preset", "code": "THR", "full": "Trap Hip-Hop", "desc": "Hard trap. Energy, aggression, gym music.", "examples": ["Choppa Won't Miss", "Need It", "Pure Cocaine", "Parking Lot"] },
+          { "id": "peakpunjabi", "name": "PEAK PUNJABI", "personal": true, "desc": "Favourite Punjabi songs." },
+          { "id": "rpm", "name": "RageProMax", "code": "RPM", "full": "Rage / hyper-trap", "desc": "Max-energy rage and hyper-trap. Moshpit music.", "examples": ["FE!N", "Stop Breathing", "Rockstar Made", "Family Ties"] },
+          { "id": "electricrock", "name": "Electric Rock", "full": "Hard rock / metal", "desc": "Hard rock, metal, heavy guitars.", "examples": ["Back In Black", "You Could Be Mine", "Whiskey In The Jar", "Enter Sandman"] },
+          { "id": "ukd", "name": "UKD.Preset", "code": "UKD", "full": "UK Drill", "desc": "UK drill." }
+        ]
+      },
+      {
+        "id": "groove", "name": "Groove N Dance", "emoji": "💃", "color": "#ff70b8",
+        "playlists": [
+          { "id": "grp", "name": "GRP.Preset", "code": "GRP", "full": "Groove Pop", "desc": "Groove-first music, Kehlani-style.", "examples": ["All My Friends", "Look Easy", "YOU'RE THE ONE", "King"] },
+          { "id": "nrg", "name": "NRG", "full": "Pure energy", "desc": "Extremely energetic. Not for dancing; it pushes your energy up.", "examples": ["Heartbeat (Childish Gambino)"] },
+          { "id": "dancernbrap", "name": "DanceRnBRap", "full": "Dance-pop rap", "desc": "Rap with a dance/pop structure.", "examples": ["Jerry Sprunger", "Chris Brown cuts"] },
+          { "id": "2000sclub", "name": "2000sClub", "full": "2000s club hits", "desc": "Peak 2000s-era pop and club hits.", "examples": ["Beauty and a Beat", "Dark Horse", "Uptown Funk", "International Love"] },
+          { "id": "grp2", "name": "GRP2.Preset", "code": "GRP2", "full": "Dance Pop", "desc": "Straight-up dance pop.", "examples": ["Sugar (Robin Schulz)", "Moves Like Jagger"] },
+          { "id": "dancehall", "name": "Dancehall", "full": "Dancehall", "desc": "Dancehall-flavoured pop and rap.", "examples": ["Nuggets (Mura Masa)", "Child's Play (Drake)"] }
+        ]
+      },
+      {
+        "id": "extras", "name": "Extras and Tribute Archive", "emoji": "🫵", "color": "#a9abc2",
+        "playlists": [
+          { "id": "firesunegi", "name": "Fire sunegi?", "personal": true, "guessed": true },
+          { "id": "sforslow", "name": "S for slow", "desc": "Slowed songs.", "guessed": true },
+          { "id": "trapbass", "name": "Trap bass drops", "desc": "Trap with heavy bass drops.", "guessed": true },
+          { "id": "peakpop", "name": "PEAK POP", "desc": "Best-of pop.", "guessed": true },
+          { "id": "peakrap", "name": "PEAK RAP", "desc": "Best-of rap.", "guessed": true },
+          { "id": "project69", "name": "Project 69", "personal": true, "guessed": true },
+          { "id": "phonk", "name": "Phonk.Preset", "code": "Phonk", "full": "Phonk", "desc": "Phonk.", "guessed": true },
+          { "id": "kpop", "name": "Kay poop", "full": "K-pop", "desc": "K-pop (BTS, SEVENTEEN).", "guessed": true }
+        ]
+      },
+      {
+        "id": "midnight", "name": "Midnight Drive", "emoji": "🌙", "color": "#a684ff",
+        "playlists": [
+          { "id": "rbp", "name": "RBP.Preset", "code": "RBP", "full": "Nighttime R&B", "desc": "Dark, intimate late-night R&B. 2AM city lights.", "examples": ["The Morning", "Often", "Wicked Games", "Earned It"] },
+          { "id": "msp", "name": "MSP.Preset", "code": "MSP", "full": "Midnight Synth Pop", "desc": "Neon synth-pop. Driving through a city at night.", "examples": ["After Hours", "Starboy", "In Your Eyes", "Softcore"] },
+          { "id": "msr", "name": "MSR.Preset", "code": "MSR", "full": "Midnight Style Rap", "desc": "Rapping over atmospheric, R&B-like beats.", "examples": ["Peso (A$AP Rocky)", "Resistance (Drake)"] },
+          { "id": "electronica", "name": "Electronica Radio", "full": "Indie electronic", "desc": "Indie electronic night music. Neon-lit introspection.", "examples": ["Something Good Can Work (Remix)", "The Prince", "Placeholder For The Night"] },
+          { "id": "vtr", "name": "VTR.Preset", "code": "VTR", "full": "Cloud Rap", "desc": "Hazy, floaty cloud rap.", "examples": ["Magnolia (Playboi Carti)"] },
+          { "id": "msb", "name": "MSB.Preset", "code": "MSB", "full": "Midnight Synth R&B", "desc": "R&B built on electronic synth structures.", "examples": ["Honestly, Nevermind (whole album)"] }
+        ]
+      },
+      {
+        "id": "feelgood", "name": "FeelGood / Chill", "emoji": "☀️🧊", "color": "#ffcf4a",
+        "playlists": [
+          { "id": "mtr", "name": "MTR.Preset", "code": "MTR", "full": "Melodic Trap Rap", "desc": "Simple, chill, fun melodic trap. Easy listening, not floaty.", "examples": ["Gunna", "Lil Baby", "Young Thug"] },
+          { "id": "brp", "name": "BRP.Preset", "code": "BRP", "full": "Bedroom Pop", "desc": "Lo-fi intimate pop. Cozy, dreamy.", "examples": ["Nice Guy", "Pink and Blue", "Is There Free Breakfast Here?"] },
+          { "id": "fgp", "name": "FGP.Preset", "code": "FGP", "full": "Feel Good Pop", "desc": "Bright sun-pop. Windows down.", "examples": ["As It Was", "Walking On A Dream", "On Top Of The World", "Rude"] },
+          { "id": "cdp", "name": "CDP.Preset", "code": "CDP", "full": "Chill EDM Pop", "desc": "Relaxed feel-good EDM. Summer evening drive.", "examples": ["Remedy", "Heatwave", "Carry On", "Show Me Love"] },
+          { "id": "goldenrock", "name": "Golden Rock", "full": "Classic rock", "desc": "Timeless rock and pop-rock. Freedom and nostalgia.", "examples": ["Summer Of '69", "Livin' On A Prayer", "Crazy", "Urgent"] }
+        ]
+      },
+      {
+        "id": "abekani", "name": "ABEKANI", "emoji": "🔊", "color": "#33d3c3",
+        "playlists": [
+          { "id": "ab6m", "name": "ABEKANI 6M", "code": "6M", "full": "Melodic House", "desc": "Melodic house and emotional tech house. Night-time euphoria.", "examples": ["Where You Are", "Escape", "Undo", "Anchor Point"] },
+          { "id": "ab2c", "name": "ABEKANI 2C", "code": "2C", "full": "Club House", "desc": "Club house and lo-fi house. Four-on-the-floor energy." },
+          { "id": "ab7l", "name": "ABEKANI7L", "code": "7L", "full": "Lo-Fi House", "desc": "House that is very lo-fi." },
+          { "id": "ab1t", "name": "ABEKANI 1T", "code": "1T", "full": "Trance / Future Bass", "desc": "Hypnotic, transcendent, euphoric." },
+          { "id": "ab4h", "name": "ABEKANI 4H", "code": "4H", "full": "Hard / Tech House", "desc": "Gym, intensity, movement." },
+          { "id": "ab3i", "name": "ABEKANI 3I", "code": "3I", "full": "Ibiza / Afro House", "desc": "Beach party, sunset dancing." },
+          { "id": "ab5f", "name": "ABEKANI 5F", "code": "5F", "full": "Festival EDM", "desc": "Big-room euphoria and celebration." }
+        ]
+      },
+      {
+        "id": "introspect", "name": "Introspect/Luxe", "emoji": "👑", "color": "#dba56a",
+        "playlists": [
+          { "id": "jazzrap", "name": "Jazz Rap", "full": "Jazzy rap", "desc": "Soothing, jazzy rap.", "examples": ["Freddie Gibbs"] },
+          { "id": "luxe", "name": "Luxe Rap", "full": "Luxury rap", "desc": "Grand, cinematic luxury rap. Power, legacy, ambition.", "examples": ["Pound Cake", "Lord Knows", "Champagne Poetry", "Tuscan Leather"] },
+          { "id": "shakespeare", "name": "Shakespeare Music", "personal": true, "desc": "The deepest lyrics I've heard." },
+          { "id": "mdr", "name": "MDR.Preset", "code": "MDR", "full": "Melancholic / Deep Rap", "desc": "Soulful, introspective rap. Reflection and growth.", "examples": ["Sing About Me, I'm Dying Of Thirst", "4 Your Eyez Only", "FEAR.", "Love Yourz"] }
+        ]
+      },
+      {
+        "id": "hindi", "name": "Hindi", "emoji": "🇮🇳", "color": "#ff9a3c",
+        "playlists": [
+          { "id": "moodyhindi", "name": "Moody Hindi", "desc": "Moody, emotional Hindi songs.", "guessed": true },
+          { "id": "bollydancey", "name": "Bolly Dancey", "desc": "Bollywood dance tracks.", "guessed": true },
+          { "id": "hindipeak", "name": "Hindi Peak", "desc": "Best-of Hindi.", "guessed": true },
+          { "id": "oldygoldy", "name": "OldyGoldy", "desc": "Old Hindi classics.", "guessed": true },
+          { "id": "hindihiphop", "name": "HindiHipHop", "desc": "Desi hip-hop.", "guessed": true }
+        ]
+      },
+      {
+        "id": "heaven", "name": "Heaven", "emoji": "🌌", "color": "#9fe3ff",
+        "playlists": [
+          { "id": "sleep", "name": "Sleep-Lofi/Piano", "desc": "Lo-fi and piano for sleep.", "guessed": true },
+          { "id": "nsl", "name": "NSL.Preset", "code": "NSL", "full": "Neo Soul", "desc": "Warm basslines, organic groove. Sunset warmth.", "examples": ["Pink + White", "Get You", "Loose", "Some"] },
+          { "id": "dreamrock", "name": "Dream Rock", "full": "Floating indie rock", "desc": "Floating indie rock. Drifting through memories.", "examples": ["Ode To The Mets", "The Blonde", "Alesis", "Something About You"] },
+          { "id": "heaven_ln0", "name": "HeaveN (LN.0)", "full": "= LateNights 0", "desc": "The Heaven playlist. It's the same playlist as LateNights 0, so it lives in both layers." },
+          { "id": "soul", "name": "soul💙", "desc": "Classic soul.", "guessed": true }
+        ]
+      }
+    ]
+  },
+
+  "lateNights": {
+    "name": "LateNights",
+    "role": "Best of the best. Opened when I have the aux, not for solo listening.",
+    "playlists": [
+      { "id": "ln0", "name": "LateNights0.", "recipe": "Heaven", "sources": ["heaven_ln0"], "desc": "The same playlist as HeaveN (LN.0) in the Heaven folder." },
+      { "id": "ln1", "name": "LateNights", "recipe": "MCP + DeadPan + Destiny + CDP", "sources": ["mcp", "deadpan", "destiny", "cdp"], "desc": "The first LateNights. Acoustic, emotional and chill." },
+      { "id": "ln2", "name": "LateNights2.0", "recipe": "RBP + NSL", "sources": ["rbp", "nsl"], "desc": "Night R&B and neo soul." },
+      { "id": "ln3", "name": "LateNights3.0", "recipe": "THR + BBR", "sources": ["thr", "bbr"], "desc": "Hard trap and bars." },
+      { "id": "ln4", "name": "LateNights4.0", "recipe": "Jazz Rap + MDR + Luxe", "sources": ["jazzrap", "mdr", "luxe"], "desc": "Jazzy, deep and luxury rap." },
+      { "id": "ln5", "name": "LateNights5.0", "recipe": "All 7 ABEKANIs", "sources": ["ab1t", "ab2c", "ab3i", "ab4h", "ab5f", "ab6m", "ab7l"], "desc": "The best of every ABEKANI." },
+      { "id": "ln6", "name": "LateNights6.0", "recipe": "MTR + MSR + VTR", "sources": ["mtr", "msr", "vtr"], "desc": "Melodic trap, midnight rap and cloud rap." },
+      { "id": "ln7", "name": "LateNights7.0", "recipe": "MSP + GRP", "sources": ["msp", "grp"], "desc": "Midnight synth-pop and groove." },
+      { "id": "prarthana", "name": "Prarthana", "recipe": "Personal", "personal": true, "sources": [], "desc": "A personal playlist that sits with LateNights." }
+    ]
+  }
+};
+// ===== END OF PLAYLIST DATA =====
+</script>
+<script>
+(function () {
+  const D = window.SPOTIFY_SYSTEM;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("map");
+  const panel = document.getElementById("panel");
+  const qInput = document.getElementById("q");
+  const orphanBtn = document.getElementById("orphans");
+
+  if (!D) {
+    panel.innerHTML = "<h2>Data missing</h2><p>The playlist data block in this file is missing or has a typo.</p>";
+    return;
+  }
+
+  // ---------- model ----------
+  const N = new Map();
+  const root = { id: "root", type: "root", name: D.library.name };
+  N.set("root", root);
+  const folders = D.library.folders.map(f => {
+    const n = { id: f.id, type: "folder", data: f, color: f.color, children: f.playlists.map(p => p.id) };
+    N.set(f.id, n);
+    return n;
+  });
+  D.library.folders.forEach(f => f.playlists.forEach(p => {
+    N.set(p.id, { id: p.id, type: "pl", data: p, folder: f.id, color: f.color, feeds: [] });
+  }));
+  const lns = D.lateNights.playlists.map(l => {
+    const n = { id: l.id, type: "ln", data: l, sources: l.sources };
+    N.set(l.id, n);
+    l.sources.forEach(s => N.get(s) && N.get(s).feeds.push(l.id));
+    return n;
+  });
+  const playlists = [...N.values()].filter(n => n.type === "pl");
+  const orphans = playlists.filter(p => !p.feeds.length);
+
+  let E = [];
+  let selected = null;      // {kind:'node', id} | {kind:'orphans'} | {kind:'search', q, hits}
+  let hovering = null;
+
+  // ---------- helpers ----------
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const curve = (x1, y1, x2, y2) => {
+    const m = (x1 + x2) / 2;
+    return `C${m},${y1} ${m},${y2} ${x2},${y2}`;
+  };
+  function nodeG(parent, n, label) {
+    const g = el("g", { class: `node n-${n.type}`, tabindex: 0, role: "button", "data-id": n.id, "aria-label": label }, parent);
+    if (n.color) g.style.setProperty("--c", n.color);
+    n.el = g;
+    return g;
+  }
+
+  // ---------- layout + render ----------
+  function build() {
+    svg.textContent = "";
+    E = [];
+    const ROW = 24, GAP = 20, TOP = 64;
+    const gZone = el("g", {}, svg);
+    const gE = el("g", { class: "edges" }, svg);
+    const gN = el("g", { class: "nodes" }, svg);
+    const gH = el("g", { class: "heads" }, svg);
+
+    let y = TOP;
+    folders.forEach(f => {
+      f.children.forEach(c => { N.get(c).y = y; y += ROW; });
+      y += GAP;
+    });
+    const H = y - GAP + 20;
+    folders.forEach(f => {
+      const ys = f.children.map(c => N.get(c).y);
+      f.y = (ys[0] + ys[ys.length - 1]) / 2;
+    });
+    root.y = (folders[0].y + folders[folders.length - 1].y) / 2;
+
+    // root
+    const xR = 16;
+    const rg = nodeG(gN, root, `${root.name}, the whole library`);
+    const rt = el("text", { x: xR + 18, y: root.y - 2, class: "t-root" }, rg);
+    rt.textContent = root.name;
+    const rs = el("text", { x: xR + 18, y: root.y + 15, class: "t-sub" }, rg);
+    rs.textContent = `${folders.length} MOODS · ${playlists.length} PLAYLISTS`;
+    const rw = Math.max(rt.getBBox().width, rs.getBBox().width) + 36;
+    rg.insertBefore(el("rect", { x: xR, y: root.y - 26, width: rw, height: 52, rx: 26, class: "shape s-root" }), rg.firstChild);
+    root.x1 = xR + rw;
+
+    // folders
+    const xF = root.x1 + 52;
+    let maxF = 0;
+    folders.forEach(f => {
+      const g = nodeG(gN, f, `${f.data.name} folder, ${f.children.length} playlists`);
+      const t = el("text", { x: xF + 15, y: f.y + 4.5, class: "t-folder" }, g);
+      t.textContent = `${f.data.emoji} ${f.data.name}`;
+      const tw = t.getBBox().width;
+      const c = el("text", { x: xF + 15 + tw + 10, y: f.y + 4.5, class: "t-count" }, g);
+      c.textContent = f.children.length;
+      const w = tw + c.getBBox().width + 40;
+      g.insertBefore(el("rect", { x: xF, y: f.y - 15, width: w, height: 30, rx: 15, class: "shape s-folder" }), g.firstChild);
+      f.x0 = xF; f.x1 = xF + w;
+      maxF = Math.max(maxF, f.x1);
+    });
+
+    // playlists
+    const xP = maxF + 60;
+    let maxP = 0;
+    playlists.forEach(p => {
+      const d = p.data;
+      const g = nodeG(gN, p, `${d.name}${d.full ? ", " + d.full : ""}`);
+      const hit = el("rect", { x: xP - 10, y: p.y - ROW / 2, height: ROW, width: 10, class: "hitbox" }, g);
+      el("circle", { cx: xP, cy: p.y, r: 4.5, class: "shape s-pl" + (d.personal ? " personal" : "") }, g);
+      const t = el("text", { x: xP + 13, y: p.y + 4.5, class: "t-pl" + (d.personal ? " personal" : "") }, g);
+      t.appendChild(document.createTextNode(d.name));
+      const extra = d.personal ? "personal" : d.full;
+      if (extra) {
+        const s = el("tspan", { class: "t-full", dx: 8 }, t);
+        s.textContent = extra;
+      }
+      p.x0 = xP;
+      p.x1 = xP + 13 + t.getBBox().width;
+      hit.setAttribute("width", p.x1 - xP + 18);
+      maxP = Math.max(maxP, p.x1);
+    });
+
+    // LateNights column, each card placed near the average height of its sources
+    const bus = maxP + 26, xL = bus + 120, LH = 48, MIN = 60;
+    let LW = 180;
+    const order = lns.slice().sort((a, b) => avgY(a) - avgY(b));
+    function avgY(l) {
+      const ys = l.sources.map(s => N.get(s).y);
+      return ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : Infinity;
+    }
+    let prev = TOP + LH / 2 - MIN;
+    order.forEach(l => {
+      const a = avgY(l);
+      l.y = isFinite(a) ? Math.max(a, prev + MIN) : Math.max(prev + MIN, H - LH / 2 - 8);
+      prev = l.y;
+    });
+    let next = H - LH / 2 - 8 + MIN;
+    for (let i = order.length - 1; i >= 0; i--) {
+      order[i].y = Math.min(order[i].y, next - MIN);
+      next = order[i].y;
+    }
+
+    const cards = order.map(l => {
+      const d = l.data;
+      const g = nodeG(gN, l, `${d.name}, pulls from ${d.recipe}`);
+      const box = el("rect", { x: xL, y: l.y - LH / 2, height: LH, rx: 10, class: "shape s-ln" + (d.personal ? " personal" : "") }, g);
+      const t = el("text", { x: xL + 14, y: l.y - 3, class: "t-ln" }, g);
+      t.textContent = d.name;
+      const r = el("text", { x: xL + 14, y: l.y + 14, class: "t-recipe" }, g);
+      r.textContent = d.recipe;
+      LW = Math.max(LW, t.getBBox().width + 28, r.getBBox().width + 28);
+      l.x0 = xL;
+      return box;
+    });
+    cards.forEach(box => box.setAttribute("width", LW));
+    el("rect", { x: xL - 22, y: 8, width: LW + 38, height: H - 8, rx: 14, class: "ln-zone" }, gZone);
+
+    // column heads
+    const heads = [[xR, "LIBRARY"], [xF, "MOOD FOLDERS"], [xP - 4, "PLAYLISTS"]];
+    heads.forEach(([x, txt]) => { el("text", { x, y: 32, class: "t-head" }, gH).textContent = txt; });
+    el("text", { x: xL, y: 32, class: "t-head gold" }, gH).textContent = "🏆 LATENIGHTS";
+
+    // edges
+    function edge(d, cls, color, a, b) {
+      const p = el("path", { d, class: "edge " + cls }, gE);
+      p.style.setProperty("--c", color);
+      E.push({ a, b, el: p });
+    }
+    folders.forEach(f => edge(`M${root.x1},${root.y} ` + curve(root.x1, root.y, f.x0, f.y), "e-root", f.color, "root", f.id));
+    folders.forEach(f => f.children.forEach(c => {
+      const p = N.get(c);
+      edge(`M${f.x1},${f.y} ` + curve(f.x1, f.y, p.x0 - 7, p.y), "e-folder", f.color, f.id, c);
+    }));
+    lns.forEach(l => l.sources.forEach(s => {
+      const p = N.get(s);
+      edge(`M${p.x1 + 8},${p.y} L${bus},${p.y} ` + curve(bus, p.y, xL, l.y),
+        "e-ln" + (s === "heaven_ln0" ? " same" : ""), p.color, s, l.id);
+    }));
+
+    const W = xL + LW + 20;
+    // Fill the panel's width; below ~80% scale the map scrolls sideways instead of shrinking further.
+    svg.setAttribute("viewBox", `0 0 ${W} ${H + 8}`);
+    svg.style.width = "100%";
+    svg.style.minWidth = Math.round(W * 0.8) + "px";
+    paint();
+  }
+
+  // ---------- highlighting ----------
+  function relatedTo(id) {
+    const n = N.get(id);
+    const s = new Set(["root", id]);
+    if (n.type === "root") N.forEach((_, k) => s.add(k));
+    if (n.type === "folder") n.children.forEach(c => { s.add(c); N.get(c).feeds.forEach(l => s.add(l)); });
+    if (n.type === "pl") { s.add(n.folder); n.feeds.forEach(l => s.add(l)); }
+    if (n.type === "ln") n.sources.forEach(c => { s.add(c); s.add(N.get(c).folder); });
+    return s;
+  }
+  function selectionSet() {
+    if (!selected) return null;
+    if (selected.kind === "node") return selected.id === "root" ? null : relatedTo(selected.id);
+    if (selected.kind === "orphans") {
+      const s = new Set(["root"]);
+      orphans.forEach(p => { s.add(p.id); s.add(p.folder); });
+      return s;
+    }
+    if (selected.kind === "search") {
+      const s = new Set();
+      selected.hits.forEach(id => relatedTo(id).forEach(x => s.add(x)));
+      return s;
+    }
+    return null;
+  }
+  function paint() {
+    const s = hovering ? relatedTo(hovering) : selectionSet();
+    const on = s && !(s.size >= N.size);
+    svg.classList.toggle("focus", !!on);
+    const hits = selected && selected.kind === "search" ? new Set(selected.hits) : null;
+    N.forEach(n => {
+      if (!n.el) return;
+      n.el.classList.toggle("on", !!on && s.has(n.id));
+      n.el.classList.toggle("sel", !!selected && selected.kind === "node" && selected.id === n.id);
+      n.el.classList.toggle("match", !!hits && hits.has(n.id));
+    });
+    E.forEach(e => e.el.classList.toggle("on", !!on && s.has(e.a) && s.has(e.b)));
+  }
+
+  // ---------- panel ----------
+  const chip = id => {
+    const n = N.get(id);
+    if (n.type === "ln") return `<button class="chip ln" data-go="${n.id}">${esc(n.data.name)}</button>`;
+    const color = n.color ? ` style="--c:${n.color}"` : "";
+    const name = n.type === "folder" ? `${n.data.emoji} ${n.data.name}` : n.data.name;
+    return `<button class="chip" data-go="${n.id}"${color}><span class="dot"></span>${esc(name)}</button>`;
+  };
+  const back = `<button class="back" data-go="root" type="button">← Overview</button>`;
+
+  function renderPanel() {
+    let html = "";
+    if (selected && selected.kind === "node" && selected.id !== "root") {
+      const n = N.get(selected.id);
+      if (n.type === "pl") html = plPanel(n);
+      if (n.type === "folder") html = folderPanel(n);
+      if (n.type === "ln") html = lnPanel(n);
+    } else if (selected && selected.kind === "orphans") {
+      html = orphanPanel();
+    } else if (selected && selected.kind === "search") {
+      html = searchPanel();
+    } else {
+      html = overviewPanel();
+    }
+    panel.innerHTML = html;
+    panel.scrollTop = 0;
+  }
+
+  function plPanel(n) {
+    const d = n.data, f = N.get(n.folder);
+    let h = back;
+    h += `<p class="eyebrow" style="--c:${f.color}"><span class="dot"></span>${esc(f.data.emoji + " " + f.data.name)}</p>`;
+    h += `<h2>${esc(d.name)}</h2>`;
+    if (d.full) h += `<p class="code" style="--c:${f.color}">${d.code ? `<b>${esc(d.code)}</b>` : ""}${esc(d.full)}</p>`;
+    if (d.personal) h += `<p><span class="badge">Personal</span></p>`;
+    if (d.desc) h += `<p>${esc(d.desc)}</p>`;
+    if (d.guessed) h += `<p class="note">Guessed from the playlist name and cover. Not confirmed yet.</p>`;
+    if (d.examples && d.examples.length) {
+      h += `<h3>Sounds like</h3><ul class="examples">${d.examples.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    }
+    h += `<h3>LateNights</h3>`;
+    h += n.feeds.length
+      ? `<p class="muted">Its best songs go into:</p><div class="chips">${n.feeds.map(chip).join("")}</div>`
+      : `<p class="muted">Doesn't feed any LateNights yet.</p>`;
+    h += `<h3>Same folder</h3><div class="chips">${f.children.filter(c => c !== n.id).map(chip).join("")}</div>`;
+    return h;
+  }
+
+  function folderPanel(n) {
+    const reach = [...new Set(n.children.flatMap(c => N.get(c).feeds))];
+    let h = back;
+    h += `<p class="eyebrow" style="--c:${n.color}"><span class="dot"></span>Mood folder</p>`;
+    h += `<h2>${esc(n.data.emoji + " " + n.data.name)}</h2>`;
+    h += `<p class="muted">${n.children.length} playlists. ${reach.length ? `Feeds ${reach.length} LateNights.` : "None of these feed a LateNights."}</p>`;
+    h += `<h3>Playlists</h3><div class="chips">${n.children.map(chip).join("")}</div>`;
+    if (reach.length) h += `<h3>Reaches LateNights</h3><div class="chips">${reach.map(chip).join("")}</div>`;
+    return h;
+  }
+
+  function lnPanel(n) {
+    const d = n.data;
+    let h = back;
+    h += `<p class="eyebrow" style="--c:var(--gold)"><span class="dot"></span>LateNights</p>`;
+    h += `<h2>${esc(d.name)}</h2>`;
+    h += `<p class="code" style="--c:var(--gold)"><b>${esc(d.recipe)}</b></p>`;
+    if (d.desc) h += `<p>${esc(d.desc)}</p>`;
+    if (n.sources.length) {
+      const byFolder = {};
+      n.sources.forEach(s => { const p = N.get(s); (byFolder[p.folder] = byFolder[p.folder] || []).push(s); });
+      h += `<h3>Pulls its best songs from</h3>`;
+      for (const fid in byFolder) {
+        const f = N.get(fid);
+        h += `<div class="group" style="--c:${f.color}"><p>${esc(f.data.emoji + " " + f.data.name)}</p><div class="chips">${byFolder[fid].map(chip).join("")}</div></div>`;
+      }
+    }
+    return h;
+  }
+
+  function orphanPanel() {
+    const byFolder = {};
+    orphans.forEach(p => { (byFolder[p.folder] = byFolder[p.folder] || []).push(p.id); });
+    let h = back;
+    h += `<p class="eyebrow">Gaps</p><h2>Not in any LateNights</h2>`;
+    h += `<p class="muted">${orphans.length} of ${playlists.length} playlists don't feed a LateNights. Some are personal on purpose. The rest could become a future LN8.</p>`;
+    for (const fid in byFolder) {
+      const f = N.get(fid);
+      h += `<div class="group" style="--c:${f.color}"><p>${esc(f.data.emoji + " " + f.data.name)}</p><div class="chips">${byFolder[fid].map(chip).join("")}</div></div>`;
+    }
+    return h;
+  }
+
+  function searchPanel() {
+    let h = back;
+    h += `<p class="eyebrow">Search</p><h2>“${esc(selected.q)}”</h2>`;
+    if (!selected.hits.length) return h + `<p class="muted">Nothing matches. Try a code like MSR, a mood, or a song name.</p>`;
+    h += `<p class="muted">${selected.hits.length} match${selected.hits.length === 1 ? "" : "es"}.</p>`;
+    h += `<div class="chips">${selected.hits.map(chip).join("")}</div>`;
+    return h;
+  }
+
+  function overviewPanel() {
+    const feeding = playlists.length - orphans.length;
+    let h = `<p class="eyebrow">How it fits together</p><h2>Two layers</h2>`;
+    h += `<p><b>FB Clearance</b> is the mood library: ${folders.length} folders and ${playlists.length} playlists, for when you're listening on your own.</p>`;
+    h += `<p><b style="color:var(--gold)">LateNights</b> is the best of the best, for when you have the aux. Each one pulls the top songs from specific playlists.</p>`;
+    h += `<div class="stats">
+      <div><b>${playlists.length}</b><span>playlists</span></div>
+      <div><b>${feeding}</b><span>feed a LateNights</span></div>
+      <div><b>${orphans.length}</b><span>don't</span></div>
+    </div>`;
+    h += `<h3>Mood folders</h3><ul class="folder-list">`;
+    folders.forEach(f => {
+      h += `<li><button type="button" data-go="${f.id}" style="--c:${f.color}"><span class="dot"></span>${esc(f.data.emoji + " " + f.data.name)}<span class="n">${f.children.length}</span></button></li>`;
+    });
+    h += `</ul>`;
+    h += `<h3>LateNights</h3><div class="chips">${lns.map(l => chip(l.id)).join("")}</div>`;
+    h += `<p class="muted" style="margin-top:18px;font-size:13px">Hover or tap anything on the map to trace its connections. Hollow dots and italics are personal playlists. A dashed line means the same playlist sits in both layers.</p>`;
+    return h;
+  }
+
+  // ---------- actions ----------
+  function select(id, scroll) {
+    hovering = null;
+    selected = id === "root" ? null : { kind: "node", id };
+    qInput.value = "";
+    orphanBtn.setAttribute("aria-pressed", "false");
+    paint();
+    renderPanel();
+    const n = N.get(id);
+    if (scroll && n && n.el && id !== "root") {
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      n.el.scrollIntoView({ block: "center", inline: "center", behavior: reduce ? "auto" : "smooth" });
+    }
+  }
+  function clearAll() {
+    selected = null;
+    hovering = null;
+    qInput.value = "";
+    orphanBtn.setAttribute("aria-pressed", "false");
+    paint();
+    renderPanel();
+  }
+
+  svg.addEventListener("click", e => {
+    const g = e.target.closest(".node");
+    if (g) select(g.dataset.id, false);
+    else clearAll();
+  });
+  svg.addEventListener("keydown", e => {
+    const g = e.target.closest && e.target.closest(".node");
+    if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(g.dataset.id, false); }
+  });
+  if (matchMedia("(hover: hover)").matches) {
+    svg.addEventListener("pointerover", e => {
+      const g = e.target.closest(".node");
+      const id = g ? g.dataset.id : null;
+      if (id !== hovering) { hovering = id; paint(); }
+    });
+    svg.addEventListener("pointerleave", () => { hovering = null; paint(); });
+  }
+  panel.addEventListener("click", e => {
+    const b = e.target.closest("[data-go]");
+    if (b) select(b.dataset.go, true);
+  });
+  orphanBtn.addEventListener("click", () => {
+    const on = orphanBtn.getAttribute("aria-pressed") !== "true";
+    qInput.value = "";
+    selected = on ? { kind: "orphans" } : null;
+    orphanBtn.setAttribute("aria-pressed", String(on));
+    paint();
+    renderPanel();
+  });
+  document.getElementById("reset").addEventListener("click", clearAll);
+  qInput.addEventListener("input", () => {
+    const q = qInput.value.trim().toLowerCase();
+    orphanBtn.setAttribute("aria-pressed", "false");
+    if (!q) { selected = null; paint(); renderPanel(); return; }
+    const hits = [];
+    N.forEach(n => {
+      if (n.type === "root") return;
+      const d = n.data;
+      const hay = [d.name, d.code, d.full, d.desc, d.recipe, ...(d.examples || [])].filter(Boolean).join(" ").toLowerCase();
+      if (hay.includes(q)) hits.push(n.id);
+    });
+    selected = { kind: "search", q: qInput.value.trim(), hits };
+    paint();
+    renderPanel();
+  });
+
+  build();
+  renderPanel();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+})();
+</script>
+</body>
+</html>

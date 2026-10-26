@@ -1,0 +1,676 @@
+Spotify Playlist Taxonomy (Canonical Version)
+
+Owner: Anirudh
+Purpose: Canonical classification system for all future song sorting.
+Priority Rule: Sonic coherence first, emotional overlap second. If a song sonically belongs somewhere, that outweighs lyrical themes.
+
+⸻
+
+RAP
+
+⸻
+
+MTR (Melodic Trap Rap)
+
+Core Identity
+
+Melody-first trap with atmospheric richness and strong vibe immersion.
+
+Traits
+
+* Heavy autotune/melodies
+* Emotional but not necessarily sad
+* Spacey production
+* Immersive vibe
+* Trap drums remain important
+
+Emotional Feel
+
+Night drives, floating, escapism, atmosphere.
+
+Examples
+
+* Wish — Trippie Redd
+* Yosemite — Travis Scott
+* Company — Don Toliver
+* Moonlight — XXXTentacion
+
+Not MTR
+
+* Hard aggressive trap → THR
+* Luxury rap → Luxe
+* chill reflective rap → MDR
+
+⸻
+
+
+
+⸻
+
+THR (Trap Hip-Hop)
+
+Core Identity
+
+Hard trap music focused on energy, momentum, and aggression.
+
+Traits
+
+* Hard drums
+* Rapping over melody
+* Street energy
+* Gym music
+
+Emotional Feel
+
+Aggression, dominance, intensity.
+
+Examples
+
+* Choppa Won’t Miss
+* Need It
+* Pure Cocaine
+* Parking Lot
+
+Not THR
+
+* Rage music → RPM
+* Melodic trap → MTR
+
+⸻
+
+RPM (RageProMax)
+
+Core Identity
+
+Maximum-energy rage and hyper-trap.
+
+Traits
+
+* Distorted synths
+* Explosive energy
+* Moshpit music
+* Hyperactive production
+
+Emotional Feel
+
+Chaos, adrenaline, destruction.
+
+Examples
+
+* FE!N
+* Stop Breathing
+* Rockstar Made
+* Family Ties (borderline)
+
+⸻
+
+MDR (Melancholic / Deep Rap)
+
+Core Identity
+
+Soulful, introspective, emotionally human rap.
+
+Traits
+
+* Reflection
+* Storytelling
+* Jazz/soul influences
+* Emotional maturity
+
+Emotional Feel
+
+Self-reflection, growth, humanity.
+
+Examples
+
+* Sing About Me, I’m Dying Of Thirst
+* 4 Your Eyez Only
+* FEAR.
+* Love Yourz
+
+Not MDR
+
+* Luxury reflection → Luxe
+* Pure lyricism → BB
+
+⸻
+
+BB (Boom Bap / Bars)
+
+Core Identity
+
+Lyric-first rap.
+
+Traits
+
+* Bars
+* Technical rapping
+* Dense writing
+* Minimal focus on atmosphere
+
+Emotional Feel
+
+Respect for craftsmanship.
+
+Examples
+
+* Accordion
+* Figaro
+* Rigamortus
+* 93 ’Til Infinity
+
+⸻
+
+Luxe Rap
+
+Core Identity
+
+Elevated luxury rap.
+
+Traits
+
+* Grand production
+* Status and success themes
+* Cinematic feel
+* Aspirational energy
+
+Emotional Feel
+
+Power, wealth, legacy, ambition.
+
+Examples
+
+* Pound Cake
+* Lord Knows
+* Champagne Poetry
+* Tuscan Leather
+
+⸻
+
+R&B / SOUL
+
+⸻
+
+RBP (Nighttime R&B)
+
+Core Identity
+
+Late-night R&B with intimacy and atmosphere.
+
+Traits
+
+* Dark R&B
+* Smooth vocals
+* Seductive production
+* Minimal pop influence
+
+Emotional Feel
+
+2AM city lights.
+
+Examples
+
+* The Morning
+* Often
+* Wicked Games
+* Earned It
+
+⸻
+
+NSL (Neo Soul)
+
+Core Identity
+
+Soulful modern music built around groove and musicianship.
+
+Traits
+
+* Warm basslines
+* Organic instrumentation
+* Soul influence
+
+Emotional Feel
+
+Sunset warmth and human connection.
+
+Examples
+
+* Pink + White
+* Get You
+* Loose
+* Some
+
+⸻
+
+POP
+
+⸻
+
+MSP (Midnight Synth Pop)
+
+Core Identity
+
+Nighttime synth-pop and synth-R&B.
+
+Traits
+
+* Neon synths
+* Night-drive atmosphere
+* Pop structures
+
+Emotional Feel
+
+Driving through a city at night.
+
+Examples
+
+* After Hours
+* Starboy
+* In Your Eyes
+* Softcore
+
+⸻
+
+MCP (Melodic Chill Pop)
+
+Core Identity
+
+Melancholy pop with strong production and nostalgia.
+
+Traits
+
+* Chill
+* Nostalgic
+* Emotional but restrained
+
+Emotional Feel
+
+Bittersweet memories.
+
+Examples
+
+* this time
+* I’m so tired…
+* The Internet
+* Super Far
+
+⸻
+
+FGP (Feel Good Pop)
+
+Core Identity
+
+Bright, uplifting sun-pop.
+
+Traits
+
+* Optimistic
+* Catchy
+* Warm
+
+Emotional Feel
+
+Windows down, sunny day.
+
+Examples
+
+* As It Was
+* Walking On A Dream
+* On Top Of The World
+* Rude
+
+⸻
+
+GRP (Groove Pop)
+
+Core Identity
+
+Pop built around movement and groove.
+
+Traits
+
+* Danceable
+* Funky
+* Rhythmic
+
+Emotional Feel
+
+Wanting to move.
+
+Examples
+
+* All My Friends
+* Look Easy
+* YOU’RE THE ONE
+* King
+
+⸻
+
+BRP (Bedroom Pop)
+
+Core Identity
+
+Lo-fi intimate pop.
+
+Traits
+
+* DIY feel
+* Cozy
+* Slightly detached
+* Dreamy
+
+Emotional Feel
+
+Late-night bedroom vibes.
+
+Examples
+
+* Nice Guy
+* Pink and Blue
+* Is There Free Breakfast Here?
+
+⸻
+
+Deadpan
+
+Core Identity
+
+Raw sadness with minimal production.
+
+Traits
+
+* Emotional vulnerability
+* Simplicity
+* Lyric focus
+
+Emotional Feel
+
+Heartbreak.
+
+Examples
+
+* Happier
+* Glimpse Of Us
+* Breakeven
+* Beanie
+
+⸻
+
+Destiny
+
+Core Identity
+
+Romantic and hopeful ballads.
+
+Traits
+
+* Love-centered
+* Emotional
+* Grand feeling
+
+Emotional Feel
+
+Soulmate music.
+
+Examples
+
+* The Night We Met
+* Perfect
+* All Of Me
+
+⸻
+
+ROCK
+
+⸻
+
+Dream Rock
+
+Core Identity
+
+Floating indie rock.
+
+Traits
+
+* Dreamy textures
+* Simple rock structures
+* Emotional atmosphere
+
+Emotional Feel
+
+Floating through memories.
+
+Examples
+
+* Ode To The Mets
+* The Blonde
+* Alesis
+* Something About You
+
+⸻
+
+Golden Rock
+
+Core Identity
+
+Classic timeless rock and pop-rock.
+
+Traits
+
+* Big hooks
+* Stadium energy
+* Timeless songwriting
+
+Emotional Feel
+
+Freedom and nostalgia.
+
+Examples
+
+* Summer Of ’69
+* Livin’ On A Prayer
+* Crazy
+* Urgent
+
+⸻
+
+Electric Rock
+
+Core Identity
+
+Hard rock, metal, and heavy guitar music.
+
+Traits
+
+* Loud guitars
+* Aggression
+* Energy
+
+Emotional Feel
+
+Intensity.
+
+Examples
+
+* Back In Black
+* You Could Be Mine
+* Whiskey In The Jar
+* Enter Sandman
+
+⸻
+
+CAF (Country / Acoustic / Folk)
+
+Core Identity
+
+Acoustic storytelling and nature-oriented music.
+
+Traits
+
+* Organic instruments
+* Storytelling
+* Simplicity
+
+Emotional Feel
+
+Mountains, roads, campfires.
+
+Examples
+
+* Riptide
+* Let Her Go
+* Stick Season
+* Budapest
+
+⸻
+
+ELECTRONIC
+
+⸻
+
+Electronica Radio
+
+Core Identity
+
+Indie electronic night music.
+
+Traits
+
+* Synth-driven
+* Atmospheric
+* Alternative electronic
+
+Emotional Feel
+
+Neon-lit introspection.
+
+Examples
+
+* Something Good Can Work (Remix)
+* The Prince
+* Placeholder For The Night
+
+⸻
+
+CDP (Chill EDM Pop)
+
+Core Identity
+
+Feel-good EDM with relaxed energy.
+
+Traits
+
+* Melodic
+* Nostalgic
+* Easy listening
+
+Emotional Feel
+
+Summer evening drive.
+
+Examples
+
+* Remedy
+* Heatwave
+* Carry On
+* Show Me Love
+
+⸻
+
+ABEKANI SYSTEM
+
+⸻
+
+Abekani 1T
+
+Core Identity
+
+Trance / Future Bass / Hypnotic Electronic
+
+Feel
+
+Transcendent, immersive, euphoric.
+
+⸻
+
+Abekani 2C
+
+Core Identity
+
+Club House / Lo-Fi House
+
+Feel
+
+Four-on-the-floor dance energy.
+
+⸻
+
+Abekani 3I
+
+Core Identity
+
+Ibiza House / Afro House
+
+Feel
+
+Beach party, sunset dancing.
+
+⸻
+
+Abekani 4H
+
+Core Identity
+
+Hard House / Tech House
+
+Feel
+
+Gym, intensity, movement.
+
+⸻
+
+Abekani 5F
+
+Core Identity
+
+Festival EDM
+
+Feel
+
+Big-room euphoria and celebration.
+
+⸻
+
+Abekani 6M
+
+Core Identity
+
+Melodic House / Emotional Tech House
+
+Feel
+
+Nighttime emotion, movement, and euphoria.
+
+Examples
+
+* Where You Are
+* Escape
+* Undo
+* Anchor Point
+
+⸻
+
+
+
+⸻
+
+Classification Rule (Most Important)
+
+When classifying a new song:
+
+1. Sonic identity > Emotional identity
+2. Production style > Lyrics
+3. Playlist coherence > Artist consistency
+4. If a song fits a non-rap playlist better than any rap playlist, do NOT force it into a rap playlist.
+
+This is the canonical version of your Spotify system and is probably the most accurate summary of the distinctions we’ve refined over time

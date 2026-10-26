@@ -13,11 +13,16 @@ My library has two layers:
 
 The map runs left to right: library → mood folders → playlists → LateNights. Hover or tap any node to trace its connections. Search works on playlist names, codes and songs. "Not in LateNights" highlights the playlists that don't feed any LateNights yet.
 
+On a phone, the whole map fills the screen. Pinch to zoom, drag to move, and tap anything to open its details in the bottom sheet.
+
+![Playlist map](playlist-map.png)
+
 ## Files
 
 | File | What it is |
 |---|---|
 | `site/index.html` | The whole site in one file. The playlist data sits between the `YOUR PLAYLIST DATA` markers. |
+| `playlist-map.png` | Static infographic of the full map. Regenerate it by opening `site/index.html#poster` and screenshotting the page at 2x. |
 | `Spotify system (1).txt` | The original written taxonomy of each playlist code. It's older than the map: the map's data block is the up-to-date version. |
 
 ## Updating

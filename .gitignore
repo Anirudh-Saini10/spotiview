@@ -1,3 +1,5 @@
 # Phone screenshots used as reference: kept out of the public repo
 *.jpg
 *.png
+# The infographic is meant to be shared
+!playlist-map.png

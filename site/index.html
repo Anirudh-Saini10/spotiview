@@ -6,7 +6,7 @@
 <title>Anirudh's Playlist Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Noto+Color+Emoji&display=swap">
 <style>
 /* Layout: a left-to-right flow (library → mood folders → playlists → LateNights) with a detail panel docked beside it.
    Deliberately single-theme: a late-night listening room, ink-blue ground, one colour per mood. */
@@ -143,6 +143,139 @@ body {
     box-shadow: 0 -14px 32px var(--shadow);
   }
 }
+
+/* ---------- phone / tablet: full-screen mind map with pinch-zoom, details in a bottom sheet ---------- */
+.sheetbar, .zoom { display: none; }
+@media (max-width: 899px), (pointer: coarse) {
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-block: calc(10px + env(safe-area-inset-top, 0px)) 0;
+  }
+  .top { width: 100%; margin: 0 0 10px; gap: 8px 16px; align-items: center; }
+  .brand .eyebrow, .lede { display: none; }
+  .brand h1 { font-size: 24px; }
+  .tools { flex: 1 1 100%; flex-wrap: nowrap; }
+  .tools input { flex: 1 1 auto; min-width: 0; width: auto; }
+  .tools input, .tools button { padding: 7px 12px; font-size: 13.5px; }
+  .tools button { white-space: nowrap; }
+  #reset { display: none; }
+
+  .layout {
+    flex: 1;
+    min-height: 0;
+    display: block;
+    position: relative;
+    max-width: none;
+    margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  }
+  .mapwrap {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: hidden;
+    touch-action: none;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #map { width: 100%; height: 100%; }
+
+  .zoom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: absolute;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--sheet-h, 64px) + 12px);
+    z-index: 2;
+  }
+  .zoom button {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--fg);
+    font: 600 18px/1 var(--f-body);
+    box-shadow: 0 6px 16px var(--shadow);
+    cursor: pointer;
+  }
+  .zoom button[data-z="fit"] { font: 500 11px/1 var(--f-mono); letter-spacing: 0.04em; }
+
+  .panel {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    max-height: 58dvh;
+    padding: 0;
+    border-width: 1px 0 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -14px 32px var(--shadow);
+    overflow: hidden;
+  }
+  .sheetbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    flex: none;
+    position: relative;
+    padding: 20px max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px));
+    background: none;
+    border: 0;
+    color: var(--fg);
+    font: 700 16px/1.2 var(--f-display);
+    text-align: left;
+    cursor: pointer;
+  }
+  .sheetbar::before {
+    content: "";
+    position: absolute;
+    top: 8px; left: 50%;
+    width: 36px; height: 4px;
+    margin-left: -18px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  #sheettitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chev {
+    width: 9px; height: 9px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg) translate(-2px, -2px);
+    flex: none;
+  }
+  .panel.collapsed .chev { transform: rotate(-135deg) translate(-2px, -2px); }
+  .panel.collapsed .sheetbar { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  #panelbody {
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 4px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+  }
+  .panel.collapsed #panelbody { display: none; }
+  .panel h2 { font-size: 23px; }
+}
+
+/* ---------- infographic export (#poster): the map alone ---------- */
+/* Windows has no flag emoji, so the exported image uses Noto Color Emoji throughout. */
+body.poster {
+  --f-display: "Bricolage Grotesque", "Noto Color Emoji", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Noto Color Emoji", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", "Noto Color Emoji", ui-monospace, Consolas, monospace;
+}
+body.poster { height: auto; display: block; overflow: visible; padding: 0; background: var(--surface); }
+body.poster .top, body.poster .panel, body.poster .zoom { display: none; }
+body.poster .layout { display: block; max-width: none; margin: 0; position: static; }
+body.poster .mapwrap { position: static; border: 0; border-radius: 0; margin: 0; overflow: visible; }
 
 /* ---------- map ---------- */
 .t-head { font: 500 10.5px var(--f-mono); letter-spacing: 0.12em; fill: var(--muted); }
@@ -311,8 +444,18 @@ body {
 <main class="layout">
   <section class="mapwrap" aria-label="Playlist map">
     <svg id="map" role="group" aria-label="FB Clearance mood folders, playlists and LateNights"></svg>
+    <div class="zoom">
+      <button type="button" data-z="in" aria-label="Zoom in">+</button>
+      <button type="button" data-z="out" aria-label="Zoom out">−</button>
+      <button type="button" data-z="fit" aria-label="Show the whole map">FIT</button>
+    </div>
   </section>
-  <aside id="panel" class="panel" aria-live="polite"></aside>
+  <aside id="panel" class="panel">
+    <button id="sheetbar" class="sheetbar" type="button" aria-expanded="true" aria-controls="panelbody">
+      <span id="sheettitle"></span><span class="chev" aria-hidden="true"></span>
+    </button>
+    <div id="panelbody" aria-live="polite"></div>
+  </aside>
 </main>
 
 <script>
@@ -460,12 +603,20 @@ window.SPOTIFY_SYSTEM = {
   const D = window.SPOTIFY_SYSTEM;
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.getElementById("map");
+  const wrap = svg.parentElement;
   const panel = document.getElementById("panel");
+  const panelBody = document.getElementById("panelbody");
+  const sheetbar = document.getElementById("sheetbar");
+  const sheetTitle = document.getElementById("sheettitle");
   const qInput = document.getElementById("q");
   const orphanBtn = document.getElementById("orphans");
+  // Same query as the phone/tablet CSS block: full-screen map with pinch-zoom instead of page scrolling.
+  const PZ = matchMedia("(max-width: 899px), (pointer: coarse)");
+  const POSTER = location.hash === "#poster";
+  if (POSTER) document.body.classList.add("poster");
 
   if (!D) {
-    panel.innerHTML = "<h2>Data missing</h2><p>The playlist data block in this file is missing or has a typo.</p>";
+    panelBody.innerHTML = "<h2>Data missing</h2><p>The playlist data block in this file is missing or has a typo.</p>";
     return;
   }
 
@@ -493,6 +644,9 @@ window.SPOTIFY_SYSTEM = {
   let E = [];
   let selected = null;      // {kind:'node', id} | {kind:'orphans'} | {kind:'search', q, hits}
   let hovering = null;
+  let MW = 0, MH = 0;       // map content size in SVG units
+  let view = null;          // pan-zoom viewport {x, y, w, h} in SVG units
+  let fitS = 1, userMoved = false;
 
   // ---------- helpers ----------
   function el(tag, attrs, parent) {
@@ -640,12 +794,97 @@ window.SPOTIFY_SYSTEM = {
         "e-ln" + (s === "heaven_ln0" ? " same" : ""), p.color, s, l.id);
     }));
 
-    const W = xL + LW + 20;
-    // Fill the panel's width; below ~80% scale the map scrolls sideways instead of shrinking further.
-    svg.setAttribute("viewBox", `0 0 ${W} ${H + 8}`);
-    svg.style.width = "100%";
-    svg.style.minWidth = Math.round(W * 0.8) + "px";
+    MW = xL + LW + 20;
+    MH = H + 8;
+    applyMode(false);
     paint();
+  }
+
+  // ---------- sizing: desktop scroll, phone pan-zoom, poster export ----------
+  function applyMode(refit) {
+    if (POSTER) {
+      svg.setAttribute("viewBox", `0 0 ${MW} ${MH}`);
+      svg.setAttribute("width", MW);
+      svg.setAttribute("height", MH);
+      document.body.dataset.size = `${Math.ceil(MW)}x${Math.ceil(MH)}`;
+      return;
+    }
+    if (PZ.matches) {
+      svg.style.minWidth = "0";
+      wrap.style.setProperty("--sheet-h", sheetH() + "px");
+      if (!view || refit || !userMoved) fit();
+      else setView(view);
+    } else {
+      view = null;
+      // Fill the panel's width; below ~80% scale the map scrolls sideways instead of shrinking further.
+      svg.setAttribute("viewBox", `0 0 ${MW} ${MH}`);
+      svg.style.width = "100%";
+      svg.style.minWidth = Math.round(MW * 0.8) + "px";
+    }
+  }
+  const sheetH = () => (PZ.matches ? sheetbar.getBoundingClientRect().height : 0);
+  const scale = () => wrap.getBoundingClientRect().width / view.w;
+
+  function setView(v) {
+    const s = wrap.getBoundingClientRect().width / v.w;
+    const m = 80 / s; // keep at least 80px of the map on screen
+    v.x = Math.min(Math.max(v.x, -v.w + m), MW - m);
+    v.y = Math.min(Math.max(v.y, -v.h + m), MH - m);
+    view = v;
+    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+  }
+  function fit() {
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const pad = 10, padB = sheetH() + 10;
+    const aw = r.width - pad * 2, ah = r.height - pad - padB;
+    const s = Math.min(aw / MW, ah / MH);
+    fitS = s;
+    userMoved = false;
+    setView({ x: -pad / s - (aw / s - MW) / 2, y: -pad / s - (ah / s - MH) / 2, w: r.width / s, h: r.height / s });
+  }
+  function zoomAt(k, cx, cy) {
+    const r = wrap.getBoundingClientRect();
+    const s = scale();
+    const ns = Math.min(3, Math.max(fitS * 0.8, s * k));
+    const fx = cx - r.left, fy = cy - r.top;
+    setView({ x: view.x + fx / s - fx / ns, y: view.y + fy / s - fy / ns, w: r.width / ns, h: r.height / ns });
+    userMoved = true;
+  }
+  function panBy(dx, dy) {
+    const s = scale();
+    setView({ x: view.x - dx / s, y: view.y - dy / s, w: view.w, h: view.h });
+    userMoved = true;
+  }
+  // Move the view so node n sits in the middle of the visible area, at least at scale minS.
+  function centerOn(n, minS) {
+    if (!view || !n.el) return;
+    const r = wrap.getBoundingClientRect();
+    const b = n.el.getBBox();
+    const ns = Math.max(scale(), minS);
+    const visH = r.height - (panel.classList.contains("collapsed") ? sheetH() : panel.getBoundingClientRect().height);
+    const w = r.width / ns, h = r.height / ns;
+    const target = { x: b.x + b.width / 2 - w / 2, y: b.y + b.height / 2 - Math.max(visH, 120) / 2 / ns, w, h };
+    const from = { ...view };
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t0 = performance.now(), dur = reduce ? 0 : 280;
+    (function step(now) {
+      const t = dur ? Math.min(1, Math.max(0, (now - t0) / dur)) : 1;
+      const e = 1 - Math.pow(1 - t, 3);
+      setView({
+        x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e,
+        w: from.w + (target.w - from.w) * e, h: from.h + (target.h - from.h) * e,
+      });
+      if (t < 1) requestAnimationFrame(step);
+    })(t0);
+    userMoved = true;
+  }
+  function hiddenBySheet(n) {
+    if (!n.el) return false;
+    const b = n.el.getBoundingClientRect();
+    const top = panel.getBoundingClientRect().top;
+    const r = wrap.getBoundingClientRect();
+    return b.top + b.height / 2 > top - 20 || b.bottom < r.top || b.right < r.left || b.left > r.right;
   }
 
   // ---------- highlighting ----------
@@ -698,21 +937,32 @@ window.SPOTIFY_SYSTEM = {
   const back = `<button class="back" data-go="root" type="button">← Overview</button>`;
 
   function renderPanel() {
-    let html = "";
+    let html = "", title = "How it fits together";
     if (selected && selected.kind === "node" && selected.id !== "root") {
       const n = N.get(selected.id);
       if (n.type === "pl") html = plPanel(n);
       if (n.type === "folder") html = folderPanel(n);
       if (n.type === "ln") html = lnPanel(n);
+      title = n.type === "folder" ? `${n.data.emoji} ${n.data.name}` : n.data.name;
     } else if (selected && selected.kind === "orphans") {
       html = orphanPanel();
+      title = "Not in any LateNights";
     } else if (selected && selected.kind === "search") {
       html = searchPanel();
+      title = `Search: ${selected.q}`;
     } else {
       html = overviewPanel();
     }
-    panel.innerHTML = html;
+    panelBody.innerHTML = html;
+    panelBody.scrollTop = 0;
     panel.scrollTop = 0;
+    sheetTitle.textContent = title;
+    // On phones the sheet stays folded until something is selected.
+    setSheet(!!selected);
+  }
+  function setSheet(open) {
+    panel.classList.toggle("collapsed", !open);
+    sheetbar.setAttribute("aria-expanded", String(open));
   }
 
   function plPanel(n) {
@@ -816,7 +1066,12 @@ window.SPOTIFY_SYSTEM = {
     paint();
     renderPanel();
     const n = N.get(id);
-    if (scroll && n && n.el && id !== "root") {
+    if (!n || !n.el || id === "root") return;
+    if (PZ.matches && view) {
+      // Chips jump to the node at a readable size; taps only move the map if the sheet covers the node.
+      if (scroll) centerOn(n, 1);
+      else if (hiddenBySheet(n)) centerOn(n, 0);
+    } else if (scroll) {
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
       n.el.scrollIntoView({ block: "center", inline: "center", behavior: reduce ? "auto" : "smooth" });
     }
@@ -830,7 +1085,67 @@ window.SPOTIFY_SYSTEM = {
     renderPanel();
   }
 
+  // ---------- touch / mouse pan-zoom (phones and tablets) ----------
+  const pts = new Map();
+  let start = null, dragging = false, suppressClick = false;
+  wrap.addEventListener("pointerdown", e => {
+    if (!PZ.matches || POSTER || !view || e.target.closest(".zoom")) return;
+    if (pts.size === 0) { dragging = false; suppressClick = false; start = { x: e.clientX, y: e.clientY }; }
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size > 1) dragging = true;
+  });
+  wrap.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId);
+    if (pts.size === 1) {
+      if (!dragging) {
+        if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8) return;
+        dragging = true;
+        try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+      panBy(e.clientX - prev.x, e.clientY - prev.y);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    } else if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      const d0 = Math.hypot(a.x - b.x, a.y - b.y), m0 = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const [a2, b2] = [...pts.values()];
+      const d1 = Math.hypot(a2.x - b2.x, a2.y - b2.y), m1 = { x: (a2.x + b2.x) / 2, y: (a2.y + b2.y) / 2 };
+      if (d0 > 0) zoomAt(d1 / d0, m1.x, m1.y);
+      panBy(m1.x - m0.x, m1.y - m0.y);
+    }
+  });
+  function endPointer(e) {
+    if (!pts.delete(e.pointerId)) return;
+    if (pts.size === 0) suppressClick = dragging;
+  }
+  wrap.addEventListener("pointerup", endPointer);
+  wrap.addEventListener("pointercancel", endPointer);
+  wrap.addEventListener("wheel", e => {
+    if (!PZ.matches || !view) return;
+    e.preventDefault();
+    zoomAt(Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
+  }, { passive: false });
+  wrap.addEventListener("gesturestart", e => e.preventDefault());
+  wrap.querySelector(".zoom").addEventListener("click", e => {
+    const b = e.target.closest("[data-z]");
+    if (!b || !view) return;
+    const r = wrap.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + (r.height - sheetH()) / 2;
+    if (b.dataset.z === "in") zoomAt(1.5, cx, cy);
+    if (b.dataset.z === "out") zoomAt(1 / 1.5, cx, cy);
+    if (b.dataset.z === "fit") fit();
+  });
+  sheetbar.addEventListener("click", () => setSheet(panel.classList.contains("collapsed")));
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => applyMode(false), 120);
+  });
+  PZ.addEventListener("change", () => applyMode(true));
+
   svg.addEventListener("click", e => {
+    if (suppressClick) { suppressClick = false; return; }
     const g = e.target.closest(".node");
     if (g) select(g.dataset.id, false);
     else clearAll();
@@ -847,7 +1162,7 @@ window.SPOTIFY_SYSTEM = {
     });
     svg.addEventListener("pointerleave", () => { hovering = null; paint(); });
   }
-  panel.addEventListener("click", e => {
+  panelBody.addEventListener("click", e => {
     const b = e.target.closest("[data-go]");
     if (b) select(b.dataset.go, true);
   });
@@ -876,9 +1191,9 @@ window.SPOTIFY_SYSTEM = {
     renderPanel();
   });
 
-  build();
   renderPanel();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+  build();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { build(); document.body.dataset.ready = "1"; });
 })();
 </script>
 </body>
